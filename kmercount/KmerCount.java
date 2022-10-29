@@ -1,4 +1,4 @@
-package kmer;
+package kmercount;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
