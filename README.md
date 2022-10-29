@@ -18,9 +18,9 @@
     └── wordcount-sorted-output
 ```
 
-## how to sort output <key, value> file
+## how to sort output <key  value> file
 
-For example, I want to sort [kmercount-output](kmercount/kmercount-output). Use this sort command in linux
+for example, I want to sort [kmercount-output](kmercount/kmercount-output). Use this sort command in linux
 ```
 sort -nrk2 kmercount/kmercount-output -o kmercount/kmercount-sorted-output
 ```
