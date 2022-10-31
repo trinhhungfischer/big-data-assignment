@@ -1,4 +1,5 @@
 package kmercount;
+
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -22,7 +23,7 @@ public class KmerCount {
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            if (line.contains(">gi") && line.length() < 9) {
+            if (line.contains(">gi") || line.length() < 9) {
 
                 return;
             }
