@@ -1,0 +1,52 @@
+# Import file from local to SQL
+create table movies(movie_id int, title string, genres string);
+
+load data local infile '/home/trinhhung/d/hust/semester7/big_data_it4931/project/ml-1m/movies.dat'
+into table movielen.movies
+fields terminated by '::'
+line terminated by '\n';
+
+create table ratings(user_id int, movie_id int, rating int, time_stamp int);
+
+load data local infile '/home/trinhhung/d/hust/semester7/big_data_it4931/project/ml-1m/ratings.dat'
+into table movielen.ratings
+fields terminated by '::'
+line terminated by '\n';
+
+
+# Import file from SQL to HDFS
+sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root --password 123456 --table ratings --target-dir /user/trinhhung/movielen/ratings -m 1
+
+sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root --password 123456 --table movies --target-dir /user/trinhhung/movielen/movies -m 1
+
+# Import file from SQL to HDFS Hive Table
+sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root -P --table movies --hive-import --hive-table movielen.movies -m 1 --direct --fields-terminated-by '\t'
+
+sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root -P --table ratings --hive-import --hive-table movielen.ratings -m 1 --direct --fields-terminated-by '\t'
+
+# Hive create database
+create database if not exists movielen;
+
+# Hive Manipulate data
+// Cach 1: Tao thanh bang cach lay data tu HDFS
+create external table if not exists movielen.ratings (user_id int, movie_id int, ratings int, time_stamp int) comment 'Rattings Table' row format delimited fields terminated by '\t' lines terminated by '\n' stored as textfile location '/user/hadoop/ratings';
+
+create external table if not exists movielen.movies (movie_id int, title string, genres string) comment 'Movies Table' row format delimited fields terminated by '\t' lines terminated by '\n' stored as textfile location '/user/hadoop/movies';
+
+// Cach 2
+create table if not exists movielen.ratings (user_id int, movie_id int, ratings int, time_stamp int) comment 'Rattings Table' row format delimited fields terminated by '::' lines terminated by '\n' stored as textfile;
+
+load data local inpath '/home/hadoop/big_data/ml-1m/ratings.dat' overwrite into table movielen.ratings;
+
+create table if not exists movielen.movies (movie_id int, title string, genres string) comment 'Movies Table' row format delimited fields terminated by '::' lines terminated by '\n' stored as textfile;
+
+load data local inpath '/home/hadoop/big_data/ml-1m/movies.dat' overwrite into table movielen.movies;
+
+# Operation for SQL
+insert into table movies values (123, "Hello World! (2022)", "coding");
+select * from movies where movie_id=123;
+
+update movies set title="F*ck World! (2025)" where movie_id=123;
+
+
+
