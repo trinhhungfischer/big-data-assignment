@@ -19,16 +19,29 @@ sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root --pa
 
 sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root --password 123456 --table movies --target-dir /user/trinhhung/movielen/movies -m 1
 
-# Import file from SQL to HDFS Hive Table
 sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root -P --table movies --hive-import --hive-table movielen.movies -m 1 --direct --fields-terminated-by '\t'
 
 sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root -P --table ratings --hive-import --hive-table movielen.ratings -m 1 --direct --fields-terminated-by '\t'
+
+// Tuowng ung voi cach 3 khi tao bang trong hive
+sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen \
+    --connection-manager org.apache.sqoop.manager.GenericJdbcManager \
+    --username root -P \
+    --table movies \
+    --hcatalog-database orc_db \
+    --hcatalog-table movies \
+    --create-hcatalog-table \
+    --hcatalog-storage-stanza 'stored as orc tblproperties ("orc.compress"="SNAPPY")'
+
+
+sqoop import --connect jdbc:mysql://127.0.0.1:3306/movielen --username root -P --table ratings --hive-import --hive-table movielen.ratings -m 1 --direct --fields-terminated-by '\t'
+
 
 # Hive create database
 create database if not exists movielen;
 
 # Hive Manipulate data
-// Cach 1: Tao thanh bang cach lay data tu HDFS
+// Cach 1: Tao thanh bang cach lay data tu HDFS -  Cach 1 la thanh cong roi nha
 create external table if not exists movielen.ratings (user_id int, movie_id int, ratings int, time_stamp int) comment 'Rattings Table' row format delimited fields terminated by '\t' lines terminated by '\n' stored as textfile location '/user/hadoop/ratings';
 
 create external table if not exists movielen.movies (movie_id int, title string, genres string) comment 'Movies Table' row format delimited fields terminated by '\t' lines terminated by '\n' stored as textfile location '/user/hadoop/movies';
@@ -42,11 +55,35 @@ create table if not exists movielen.movies (movie_id int, title string, genres s
 
 load data local inpath '/home/hadoop/big_data/ml-1m/movies.dat' overwrite into table movielen.movies;
 
+// Cach 3: Do cách 1 tạo table được lưu dưới dạng textfile nên không hỗ trợ thao tác xóa và cập nhật
+tuy nhiên khi import data bằng sqoop lên hdfs tạo thành bảng hive cần phải import dưới dạng ORC
+Nói qua về ORC thì nó viết tắt cho (Apache Optimized Row Columnar) là kiểu định dạng lưu trữ dữ liệu
+hướng cột mã nguồn mở và miễn phí  được sử  dụng phổ  biến trong hệ sinh thái Hadoop.
+
+create external table if not exists movielen.ratings (user_id int, movie_id int, ratings int, time_stamp int) 
+comment 'Rattings Table' 
+row format delimited 
+fields terminated by '\t' 
+lines terminated by '\n' 
+stored as orc 
+location '/user/hadoop/ratings';
+
+create external table if not exists movielen.movies (movie_id int, title string, genres string) 
+comment 'Movies Table' 
+row format delimited 
+fields terminated by '\t' 
+lines terminated by '\n' 
+stored as orc 
+location '/user/hadoop/movies';
+
+
 # Operation for SQL
-insert into table movies values (123, "Hello World! (2022)", "coding");
-select * from movies where movie_id=123;
+insert into table movies values (9999, "Hello World! (2022)", "coding");
+
+select * from movies where movie_id=999;
 
 update movies set title="F*ck World! (2025)" where movie_id=123;
 
+select * from movies where movie_id=123;
 
-
+delete from movies where movie_id=9999;
